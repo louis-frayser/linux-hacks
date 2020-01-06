@@ -1,0 +1,97 @@
+#! /bin/sh
+
+# /usr/lucho/bin/dum
+#
+# Copyright (C) 2000 - 2009 Louis Fayser
+#
+
+# Script to determine and format disk space usage in megabytes
+# This is basically a "du -hx|sort|awk 'printf ...' " >dum.out
+
+# Fri Dec  8 01:46:55 PST 2000
+# - Updated to create new dum.out in /tmp then move it in place when done.
+
+# Tue Oct 14 2008 Louis Frayser <frayser@earthlink.net>
+# - Rearranged order of detection of output file. Moved it to last.
+
+# 2009-05-07 - Got rid of trailing spaces in output.
+
+# 2009-10-03 Louis Frayser <frayser@earthlink.net>
+# - fixed directory selection bug when running dum on other than current directory
+
+usage(){
+cat <<usg
+usage:
+   dum [options]
+   dum [options] target_dir...
+
+   options:
+   -A -- all file system encounted are considered. Default only same fs.
+   -D -- dereference symlinks given as target directories.
+   -L -- dereference all symlinks encountered. See Also: -A
+   -h -- this help
+
+usg
+}
+
+while getopts '$ADHLh' opt
+do
+	case $opt in 
+		A) all_fs=true;;
+		L|D|H) duOpts="$duOpts -$opt";;
+		h) usage; exit;;
+		*) usage; exit 1;;
+
+	esac
+
+done
+
+shift $(($OPTIND -1))
+test "$all_fs" = true || duOpts="$duOpts -x"
+
+## Verify target when it's not the current directory
+[ -n "$1"  -a $# -eq 1 ] &&  { cd "$1" || exit 1 ;}
+
+TMP=${TMPDIR:=/tmp}/dum.$$
+pwd
+
+du $duOpts  | sort -n | \
+	awk '
+	{
+		v=$1;
+		u="KB";
+		if(v > 1024^2){
+			u="GB";
+			v/=1024^2;
+		}else {
+			if(v > 1024.0){
+				u="MB";
+				v/=1024.0;
+			}
+		}
+# $2 " " $3..$5 is to handle filenames with a space in them
+	s=""
+	for(i=3; i <=NF; i++){
+		s=s " " $i
+	}
+		printf "%7.3f%s %-s\n", v,u,$2  s
+	}' | tee $TMP
+
+## Make a world writabel dum.out
+umask 000
+LDUM="$PWD/dum.out"
+if cat "$TMP" >"$LDUM";then
+  rm "$TMP"
+	OF="$LDUM"
+else
+	rm "$LDUM"
+	OF=/tmp/dum$(pwd|sed -e 's/\//./g' -e 's/ /_/g').out
+	mv "$TMP" "$OF"
+fi
+
+
+{   printf "${0##*/}: Output is "
+    if  [ "$OF" =  "$LDUM" ] 
+        then readlink -m "$PWD/dum.out"  
+       else readlink -m "$OF"
+      fi ;} 1>&2

@@ -1,0 +1,131 @@
+#!/bin/bash
+# $Id: disk,v 1.1 2001/07/14 06:09:21 frayser Exp $
+# $Author: frayser $ Louis Frayser <frayser@Earthlink.NET>
+# $Source: /usr/lucho/src/CVS/lbin/disk,v $
+# $Log: disk,v $
+# Revision 1.1  2001/07/14 06:09:21  frayser
+# List the physical disks
+#
+# Thu Jan 27 16:20:41 PST 2011
+# Reading demesg and /var/log/dmesg as newer items (removable disks especially) only
+# appear in dmesg.  The old (bootime) devices may no longer appear in dmesg if the 
+# bufrer has filled. NOTE: removable disk report is not reliable.
+#
+# Sat Jan  8 17:54:52 PST 2011
+# New method for disk models as the new driver treats them as scsi
+#sdls () { dmesg | grep ^'scsi .*ATA' | tr -s " " | cut -d ' ' -f 5,6 ; }
+#atals(){ dmesg |grep 'ATA DISK' |sort ;}
+#
+
+do_lsblk(){ 
+  lsblk -S -o name,tran,type,vendor,size,model  |sort
+}
+
+do_lshw(){
+  lshw -class disk -short | grep -v '0/0'| {
+	while read _hwpath dev f3 desc1 desc2 desc3
+	do [[ "$f3" != disk ]] && continue
+	  case $dev in (=====*) continue;;
+		(/dev/sd?) Disks+=("$dev $desc1 $desc2 $desc3");;
+		(*) Others+=("$dev $desc1 $desc2 $desc3");;
+	  esac
+	done
+	for e in "${Disks[@]}" "${Others[@]}"
+	do desc="${e#* }"
+	  printf "%-14s %6s %-s\n" "${e%% *}" "${desc%% *}" "${desc#* }";done
+} ;}
+
+
+#! /bin/sh
+
+
+do_default(){
+
+  discus () { 
+	{  test -e /var/log/dmesg  && cat /var/log/dmesg; dmesg ;}  | \
+	 sed -e 's/^\[[0-9 .]\+\] //' -e '/^\(sd\|scsi\) /!d' \
+	 -e '/generic/d'  ; }
+	
+	discus | {
+	  typeset -A Sizes
+	  while read class dev0 type f4 da_make da_model _rest
+	  do
+		if test $class == scsi ; then
+		  busid=${dev0%:}
+		  if test $type == Direct-Access ; then 
+			#read ; echo $REPLY
+			read _sd _dev0a udev0 _secs _bsz log blks sz0 u_sz siu
+			udev1=${udev0%?}
+			udev=${udev1:1}; udevs="$udevs $udev"
+			if [ -e /dev/$udev ] ; then
+			  sz=${sz0:1}
+			  Sizes[$udev]=${sz%.*}
+			  printf "%4s %s %s %s %-6s %s\n" \
+			   $udev $sz0 $u_sz $siu $da_make $da_model
+			fi
+		  fi
+		fi
+	  done
+	  let total=0
+	  for size in ${Sizes[@]}; do let total+=$size; done
+		echo -e  "--\nTOTAL $total"
+}|sort -u
+
+}
+
+scale(){
+     local l p 
+     local n s=K
+      [ -n "$1" ] && n=$1 || n=0
+
+     l=${#n}; let $((l>3)) && { p=$((l-3)); n=${n:0:$p}.${n:$p}; s=M ;}
+
+     n1=${n%.*} 
+     l=${#n1}; let $((l>3)) && { n=$n1;p=$((l-3)); n=${n:0:$p}.${n:$p}; s=G ;}
+
+
+     n1=${n%.*}
+     l=${#n1}; let $((l>3)) && { n=$n1; p=$((l-3)); n=${n:0:$p}.${n:$p}; s=T ;}
+
+
+     n1=${n%.*}
+     l=${#n1}; let $((l>3)) && { n=$n1; p=$((l-3)); n=${n:0:$p}.${n:$p}; s=P ;}
+
+     echo $n$s; return
+
+}
+
+ndisk () { 
+### use udiskctl
+    declare -A sizes
+
+    while read dev siz; do
+        sizes[$dev]=$siz;
+    done < <(sed -n -e "s@.* \([0-9]\+\) \(sd[a-z]$\)@\2 \1@p" /proc/partitions)
+
+    udisksctl status | grep -v -- -- | rev | while read ecived laires noisiver ledom; do
+        echo $ledom $noisiver $laires $ecived | rev;
+    done | while read dev serial rev model; do
+        case $dev in 
+            sd[a-z]) printf "%-6s %8s %-24s %-8s %s\n" $dev $(scale "${sizes[$dev]}") $serial $rev "$model";;
+                 D*) printf "%-6s %-8s %-24s %-8s %s\n" $dev SIZE  $serial $rev "$model";
+                        echo ------ -------- ---------------------------------------------------------------
+        esac
+    done
+}
+
+### Main:
+prognames="udisksctl lsblk lshw"
+paths="/run/current-system/sw/bin /sbin /usr/sbin /bin /usr/bin"
+for name in $prognames
+do  for path in $paths
+    do prog=$path/$name
+       [ -x $prog ] && { method="${prog##*/}"; break 2;  };  done ; done
+
+case $method in
+    udisksctl) ndisk;;
+    lsblk)   do_lsblk;;
+    lshw) do_lshw;;
+    *)        do_default;;
+esac
+    
