@@ -6,7 +6,10 @@ A collection of system and user admin programs, mostly bash scripts. Most are fo
 
 	These are currently optimizedf for Gentoo, though they've run on all sorts of systems in the past.
 
-### disk --Idendifies whole disks.
+### dfmax -- Liste filesystems by free space.
+	Displays this disks and their device names and sizes.
+	
+### disk --Identifies whole disks.
 	Displays this disks and their device names and sizes.
 	
 ### dum -- Disk Usage in Megabytes
@@ -16,7 +19,7 @@ A script to run du(1) recursively, sort and format the output by usage.  It also
 	Runs dum if necessary.
         NOTE: dummax is shell function.
 
-### xdf -- Find the filessystems with the most free space
+### xdf -- Rank filesystems by least (as a percentage) free space.
 
 
 ### Screenshot (dum, disk, dummax)
