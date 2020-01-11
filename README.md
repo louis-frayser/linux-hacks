@@ -21,4 +21,4 @@ A script to run du(1) recursively, sort and format the output by usage.  It also
 
 ### Screenshot (dum, disk, dummax)
  
- [Screenshot](doc/images/linux-hacks--2020-01-06.png) 
+ ![Screenshot](doc/images/linux-hacks--2020-01-06.png) 
