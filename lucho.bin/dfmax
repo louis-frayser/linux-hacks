@@ -23,7 +23,7 @@
 TMP=/tmp/df.$$
 
 #### NOTE: zfs volumes with same stats are collapsed to on line
-df -B 1000 -P -k "$@" |egrep -v tmpfs | \
+df -B 1000 -P  "$@" |egrep -v tmpfs | \
 	sed -n  -e "s/        1k-blocks/              Total/p" -e "2,\$w $TMP"
 
 sort -k 4n $TMP |uniq| awk '
@@ -43,8 +43,8 @@ function  units(val){
 		ret="GB";
 	}else {
 		if(val >1000)
-			ret="MB";
-                        else ret="KB";
+		   ret="MB";
+                   else ret="KB";
 	}
    }
    return ret;
@@ -53,16 +53,13 @@ function  units(val){
 
 
 BEGIN{
-	print "Filesystem\t\t1024-blocks  Used Available Capacity Molunted on"
+	print "Filesystem\t\t1K - blocks  Used Available Capacity Molunted on"
 
 	print "--------------------------------------------------------------"
            oval=0;
 }
 {
 		dev=$1
-		blocks+=$2
-		used+=$3
-		avail+=$4
 		ratio=$5;
 		mp=$6;
 
@@ -72,18 +69,21 @@ BEGIN{
 		bu=units($2);
 		uu=units($3);
 		au=units($4);
-          if ( $4  != oval)  	
-              printf("%24.24s %6.1f%s %6.1f%s %6.1f%s  %4.1f%% %-14s\n", 
+          if ( $4  != oval){
+              # ZFS makes this tricky
+		used+=$3
+		avail+=$4
+	        blocks+=$2
+                printf("%24.24s %6.1f%s %6.1f%s %6.1f%s  %4.1f%% %-14s\n", 
 	      		      dev, blocks1,bu, used1, uu, avail1, au, ratio, mp ); 
+           }
              
            oval=$4;   
 }
 
 END{
-	print "=============================================================="
-        printf("Totals                   %6.1fGB  %5.1fGB  %4.1fGB  %3.1f%%\n",
-		(blocks/1024.0^2),used/(1024.0^2),avail/(1024.0^2), (used*100.0)/blocks);
-	
+    print "=============================================================="
+    printf("Totals                   %6.1f%s  %5.1f%s  %4.1f%s  %3.1f%%\n",
+            norm(blocks), units(blocks) , norm(used), units(used) , norm(avail), units(avail) , 
+               (used*100.0)/blocks);
 }'
-
-rm $TMP
