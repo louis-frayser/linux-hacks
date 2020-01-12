@@ -20,7 +20,7 @@
 # The header is displayed imediately.  The tmp file is sorted
 # then displayed.
 #----------------------------------------------------------------
-TMP=/tmp/df.$$
+TMP=${TMPDIR:=/tmp}/df.$$
 
 #### NOTE: zfs volumes with same stats are collapsed to on line
 df -B 1000 -P  "$@" |egrep -v tmpfs | \
@@ -87,3 +87,5 @@ END{
             norm(blocks), units(blocks) , norm(used), units(used) , norm(avail), units(avail) , 
                (used*100.0)/blocks);
 }'
+
+rm "$TMP"
