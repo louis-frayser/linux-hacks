@@ -1,0 +1,129 @@
+#! /bin/sh
+# xdf -- display disk usage sorted
+
+# $Id: xdf,v 1.7 2013/03/28 04:37:01 frayser Exp $
+# $Author: frayser $ Louis Frayser <frayser@Earthlink.NET>
+# $Source: /usr/lucho/src/CVS/lucho/bin/xdf,v $
+# $Log: xdf,v $
+# Revision 1.7  2013/03/28 04:37:01  frayser
+# Added -c switch to for display of camera volumes
+#
+# Revision 1.6  2013/03/28 03:30:42  frayser
+# Ajusted awk to show tmpfs volums
+#
+# Revision 1.5  2006/02/09 05:05:34  frayser
+# Changed formatting of devices
+# Including nfs devices in output
+#
+# Revision 1.4  2003/06/16 13:07:41  frayser
+# Added column headings
+# Fixed --norc directive
+#
+# Revision 1.3  2003/06/12 11:44:20  frayser
+# Added headings
+#
+# Revision 1.2  2001/08/06 08:52:34  frayser
+# Changes to support wider device names resulting from LVM
+#
+# Revision 1.1  2000/09/13 04:34:16  frayser
+# Print df usage in MB or GB as apropriate, sorted by capacity"
+#
+# Filesystem 1024-blocks  Used Available Capacity Molunted on
+# /dev/hda3              73596   52253    17135     75%   /
+# /dev/hdb1             201330  171167    19767     90%   /lusr
+# /dev/sda2             448574   84727   338196     20%   /var
+# /dev/scd0             646298  646298        0    100%   /cdrom
+#----------------------------------------------------------------
+# Sort the above df olutplut ( execpt the header )into the tmp file.
+# The header is displayed imediately.  The tmp file is sorted
+# then displayed.
+#----------------------------------------------------------------
+# options 
+# -c force automounts on /a/{camera,camcorder}??
+PATH=/sbin:/usr/sbin:${PATH}
+TMP=/tmp/df.$$
+
+camdevs(){
+    local c='## Get basenames of devices, append "/media/"'
+    local Cams0=(/dev/vg0/{camera,camcorder}[0-9][0-9])
+    local Cams=${Cams0[@]/*cam//a/cam}
+    echo ${Cams[@]}
+}
+OPTs="n:ch"
+usage(){
+cat <<EOF
+usage 
+    $0 opts
+       where opts 
+          -c   cd to cameraNN archive to force automounting
+          -nX  ignore filesystem X where X is c -> cameras,camcorders
+EOF
+}
+fs_filter="| egrep -v tmpfs"
+while getopts $OPTs opt
+  do  case  $opt in 
+  c)  ( for d in $(camdevs) # force mounts (used by camf(1))
+        do cd $d ; done);;
+   n) if [ $OPTARG = c  ]; then  fs_filter="$fs_filter\|/cam"; else usage; exit 1; fi ;;
+*)  usage; exit -1;;
+  esac
+done
+shift $((OPTIND-1))
+
+#[ -c /dev/zfs ] && {  zfs list | sort -k 4n;  echo ...; sleep 4;}
+[ -c /dev/zfs ] && {  df -h -tzfs| sort -k 5n;  echo ...; sleep 4;}
+
+eval df -P -B 1000 "$@" $fs_filter  |  sed -n \
+	-e "s@/dev/mapper/\([^-]*\)-@/dev/\1/@"\
+	-e 's/--/-/' \
+	-e "2,\$w $TMP" 
+
+sort -k +5n $TMP | awk '
+
+function  norm(val){ 
+   if(val > 1000 )
+      return norm( val/1000) 
+  else return val;
+ }
+
+function  units(val){
+          if(val > 10^9) return "TB";
+          else{	if(val > 10^6) return "GB"; else { if(val >10^3) return "MB";  else return "KB"} }
+}
+
+
+BEGIN{
+	print"Filesystem                Total       Used Available  Use% Mounted on"
+	print "--------------------------------------------------------------"
+}
+/^\// || /^[^ ]*:\//|| /tmpfs/{
+		dev=$1
+		blocks+=$2
+		used+=$3
+		avail+=$4
+		ratio=$5;
+		mp=$6;
+
+		blocks1=norm($2);
+		used1=norm($3);
+		avail1=norm($4);
+		bu=units($2);
+		uu=units($3);
+		au=units($4);
+
+	printf("%-24.24s %6.1f%s %6.1f%s %6.1f%s  %4.1f%% %-14s\n", 
+		dev, blocks1,bu, used1, uu, avail1, au, ratio, mp ); 
+}
+
+END{
+	print "=============================================================="
+        printf("Total                      %4.1f%s   %4.1f%s   %4.1f%s  %3.1f%%\n",
+                       norm(blocks),units(blocks), norm(used),units(used), norm(avail), units(avail), (used*100)/blocks);
+ #(blocks/1024.0^2),used/(1024.0^2),avail/(1024.0^2), (used*100.0)/blocks);
+	
+}'
+
+
+rm  $TMP
+
+
