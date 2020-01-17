@@ -60,15 +60,20 @@ du $duOpts  | sort -n | \
 	{
 		v=$1;
 		u="KB";
-		if(v > 1024^2){
-			u="GB";
-			v/=1024^2;
+		if(v > 1024^3){
+			u="TB";
+			v/=1024^3;
 		}else {
-			if(v > 1024.0){
-				u="MB";
-				v/=1024.0;
-			}
-		}
+		    if(v > 1024^2){
+			     u="GB";
+			     v/=1024^2;
+		    }else {
+			   if(v > 1024.0){
+				   u="MB";
+				   v/=1024.0;
+			   }
+		     }
+         }
 # $2 " " $3..$5 is to handle filenames with a space in them
 	s=""
 	for(i=3; i <=NF; i++){
