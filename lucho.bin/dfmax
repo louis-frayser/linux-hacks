@@ -69,7 +69,7 @@ BEGIN{
 		bu=units($2);
 		uu=units($3);
 		au=units($4);
-          if ( $4  != oval){
+          if ( $4  != oval || match(dev, /\//)==1){
               # ZFS makes this tricky
 		used+=$3
 		avail+=$4
