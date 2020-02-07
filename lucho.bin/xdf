@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 # xdf -- display disk usage sorted
 
 # $Id: xdf,v 1.7 2013/03/28 04:37:01 frayser Exp $
@@ -71,6 +71,7 @@ done
 shift $((OPTIND-1))
 
 #[ -c /dev/zfs ] && {  zfs list | sort -k 4n;  echo ...; sleep 4;}
+##FIXME:  check for zfs mounted in /proc/mounts before df -t zfs fail
 [ -c /dev/zfs ] && {  df -h -tzfs| sort -k 5n;  echo ...; sleep 4;}
 
 eval df -P -B 1000 "$@" $fs_filter  |  sed -n \
