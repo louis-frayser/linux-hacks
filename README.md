@@ -4,7 +4,7 @@ A collection of system and user admin programs, mostly bash scripts. Most are fo
 
 ## Disk Utilities
 
-	These are currently optimizedf for Gentoo, though they've run on all sorts of systems in the past.
+	These are currently optimized for Gentoo, though they've run on all sorts of systems in the past.
 
 ### dfmax -- List filesystems by free space.
 	Displays filesystems and sizes sorted by free space.
