@@ -6,11 +6,11 @@ A collection of system and user admin programs, mostly bash scripts. Most are fo
 
 	These are currently optimizedf for Gentoo, though they've run on all sorts of systems in the past.
 
-### dfmax -- Liste filesystems by free space.
-	Displays this disks and their device names and sizes.
+### dfmax -- List filesystems by free space.
+	Displays filesystems and sizes sorted by free space.
 	
 ### disk --Identifies whole disks.
-	Displays this disks and their device names and sizes.
+	Displays disks and their device names and sizes.
 	
 ### dum -- Disk Usage in Megabytes
 A script to run du(1) recursively, sort and format the output by usage.  It also saves the result to the local specified directory.
@@ -24,4 +24,4 @@ A script to run du(1) recursively, sort and format the output by usage.  It also
 
 ### Screenshot (dum, disk, dummax)
  
- ![Screenshot](doc/images/linux-hacks--2020-01-06.png) 
+ ![Screenshot](doc/images/linux-hacks--2020-09-03.png) 
