@@ -26,7 +26,7 @@ TMP=${TMPDIR:=/tmp}/df.$$
 df -B 1000 -P  "$@" |egrep -v tmpfs | \
 	sed -n  -e "s/        1k-blocks/              Total/p" -e "2,\$w $TMP"
 
-sort -k 4n $TMP |uniq| awk '
+sort -k 4n $TMP | awk '
 
 function  norm(val){
 	while(val > 1000){
