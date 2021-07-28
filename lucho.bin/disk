@@ -36,9 +36,6 @@ do_lshw(){
 } ;}
 
 
-#! /bin/sh
-
-
 do_default(){
 
   discus () { 
@@ -83,16 +80,13 @@ scale(){
      n1=${n%.*} 
      l=${#n1}; let $((l>3)) && { n=$n1;p=$((l-3)); n=${n:0:$p}.${n:$p}; s=G ;}
 
-
      n1=${n%.*}
      l=${#n1}; let $((l>3)) && { n=$n1; p=$((l-3)); n=${n:0:$p}.${n:$p}; s=T ;}
-
 
      n1=${n%.*}
      l=${#n1}; let $((l>3)) && { n=$n1; p=$((l-3)); n=${n:0:$p}.${n:$p}; s=P ;}
 
      echo $n$s; return
-
 }
 
 ndisk () { 
@@ -127,5 +121,4 @@ case $method in
     lsblk)   do_lsblk;;
     lshw) do_lshw;;
     *)        do_default;;
-esac
-    
+esac   
