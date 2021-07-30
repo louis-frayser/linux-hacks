@@ -109,7 +109,8 @@ ndisk () {
 }
 
 ### Main:
-prognames="udisksctl lsblk lshw"
+## The order of prognames affects which tool is used...
+prognames="lsblk udisksctl lshw"
 paths="/run/current-system/sw/bin /sbin /usr/sbin /bin /usr/bin"
 for name in $prognames
 do  for path in $paths
