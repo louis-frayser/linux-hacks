@@ -1,0 +1,32 @@
+#! /usr/local/bin/bash
+PATH=/sbin:/usr/sbin:/usr/local/sbin:$PATH
+cd /dev
+
+while read aline
+do key=${aline%:*}; rest="${aline#*: }"
+   case $key in
+	  *Name) name="$rest";;
+	  descr)  descr="$rest";;
+	  Mediasize) size0="${rest#*(}"; size="${size0%)*}";;
+	  lunname) descr="$rest";;
+	  ident) printf "%4s %6s %s\n" "$name" "$size" "$descr";;
+   esac
+
+done <<<$(geom disk list)
+
+# Geom name: da3
+# Providers:
+# 1. Name: da3
+#    Mediasize: 4000786153472 (3.6T)
+#    Sectorsize: 512
+#    Stripesize: 4096
+#    Stripeoffset: 0
+#    Mode: r5w5e9
+#    descr: WD easystore 25FB
+#    lunname: WD      easystore 25FB  WCC7K4CVDCSU
+#    lunid: 50014eef0a7e94cb
+#    ident: 574343374B34435644435355
+#    rotationrate: 5400
+#    fwsectors: 63
+#    fwheads: 255
+
