@@ -80,7 +80,7 @@ du $duOpts  | sort -n | \
 		s=s " " $i
 	}
 		printf "%7.3f%s %-s\n", v,u,$2  s
-	}' | tee $TMP
+	}' > $TMP
 
 ## Make a world writabel dum.out
 umask 000
@@ -93,10 +93,11 @@ else
 	OF=/tmp/dum$(pwd|sed -e 's/\//./g' -e 's/ /_/g').out
 	mv "$TMP" "$OF"
 fi
+tail -25 "$OF"
 
 
 {   printf "${0##*/}: Output is "
     if  [ "$OF" =  "$LDUM" ] 
-        then readlink -m "$PWD/dum.out"  
-       else readlink -m "$OF"
+        then readlink  "$PWD/dum.out"  
+       else readlink  "$OF"
       fi ;} 1>&2
